@@ -58,8 +58,8 @@ class ConfigParser:
         lines = content.split("\n")
 
         # Simple approach: map keys to line numbers
-        # This is a simplified version - a full implementation would use a proper JSON parser
-        # with location tracking
+        # This is a simplified version - a full implementation would use a
+        # proper JSON parser with location tracking
         for line_num, line in enumerate(lines, 1):
             line = line.strip()
             if ":" in line and not line.startswith("//") and not line.startswith("#"):

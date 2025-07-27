@@ -12,7 +12,6 @@ from typing import Any, Dict
 import pytest
 
 from linter.config_parser import ConfigParser
-from linter.models import ConfigType, Severity
 from linter.rules import RuleEngine
 
 

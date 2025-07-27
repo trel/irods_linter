@@ -7,9 +7,7 @@ This module tests individual rules and the rule engine.
 from pathlib import Path
 from typing import Any, Dict
 
-import pytest
-
-from linter.models import LintResult, Severity
+from linter.models import Severity
 from linter.rules import (
     DatabaseConfigRule,
     FilePermissionsRule,

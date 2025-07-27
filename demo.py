@@ -71,7 +71,7 @@ def main():
 
     # Test 6: JSON output
     print("\n6. Testing JSON output format:")
-    result = run_command(
+    run_command(
         [
             str(python_exe),
             str(linter_script),

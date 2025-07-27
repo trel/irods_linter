@@ -68,17 +68,21 @@ def main():
         (".venv/bin/python -m bandit -r linter/ -f json", "Running Security Scan"),
         # Coverage check
         (
-            ".venv/bin/python -m pytest tests/ --cov=linter --cov-fail-under=80 --quiet",
+            ".venv/bin/python -m pytest tests/ --cov=linter "
+            "--cov-fail-under=80 --quiet",
             "Checking Test Coverage",
         ),
         # Example configurations
         (
-            ".venv/bin/python irods_linter.py examples/secure_unattended_installation.json",
+            ".venv/bin/python irods_linter.py "
+            "examples/secure_unattended_installation.json",
             "Testing Secure Configuration",
         ),
         # JSON validation
         (
-            "python -c \"import json; [json.load(open(f)) for f in ['examples/sample_unattended_installation.json', 'examples/secure_unattended_installation.json']]\"",
+            'python -c "import json; [json.load(open(f)) for f in '
+            "['examples/sample_unattended_installation.json', "
+            "'examples/secure_unattended_installation.json']]\"",
             "Validating JSON Examples",
         ),
     ]
@@ -92,7 +96,7 @@ def main():
             print("❌ FAILED")
 
     print(f"\n{'='*60}")
-    print(f"📊 SUMMARY")
+    print("📊 SUMMARY")
     print("=" * 60)
     print(f"Total checks: {total_checks}")
     print(f"Passed: {success_count}")
@@ -104,7 +108,8 @@ def main():
         return 0
     else:
         print(
-            f"\n⚠️  {total_checks - success_count} checks failed. Please review the output above."
+            f"\n⚠️  {total_checks - success_count} checks failed. "
+            "Please review the output above."
         )
         return 1
 

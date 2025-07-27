@@ -47,7 +47,10 @@ class LintResult:
         location = f"line {self.line_number}"
         if self.column:
             location += f", column {self.column}"
-        return f"{self.file_path}:{location}: {self.severity.value}: {self.rule_id}: {self.message}"
+        return (
+            f"{self.file_path}:{location}: {self.severity.value}: "
+            f"{self.rule_id}: {self.message}"
+        )
 
 
 @dataclass

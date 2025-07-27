@@ -13,7 +13,10 @@ setup(
     version="1.0.0",
     author="iRODS Linter Team",
     author_email="metadata-school@example.com",
-    description="A linter for iRODS configuration files that checks for best practices and security issues",
+    description=(
+        "A linter for iRODS configuration files that checks for "
+        "best practices and security issues"
+    ),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/metadata-school/irods_linter",

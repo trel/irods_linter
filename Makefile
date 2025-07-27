@@ -48,7 +48,7 @@ lint: install  ## Run linter on examples
 lint-table: install  ## Run linter with table output
 	$(VENV_PYTHON) irods_linter.py --format table examples/sample_unattended_installation.json
 
-lint-json: install  ## Run linter with JSON output  
+lint-json: install  ## Run linter with JSON output
 	$(VENV_PYTHON) irods_linter.py --format json examples/sample_unattended_installation.json
 
 lint-errors: install  ## Show only errors

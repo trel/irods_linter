@@ -9,18 +9,13 @@ Author: iRODS Linter Team
 """
 
 import argparse
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
-from rich import print as rprint
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from linter.config_parser import ConfigParser
 from linter.models import LintResult, Severity

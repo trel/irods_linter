@@ -1,17 +1,15 @@
-"""
-Rule engine for iRODS configuration linting.
+"""Rule engine for iRODS configuration linting.
 
 This module contains the rule definitions and the engine that applies them
 to configuration data. Rules are organized by category and can be easily
 extended or customized.
 """
 
-import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from .models import ConfigType, LintResult, SecurityContext, Severity
+from .models import LintResult, SecurityContext, Severity
 
 
 class Rule(ABC):
@@ -119,8 +117,14 @@ class SecurityPolicyRule(Rule):
                         self._create_result(
                             file_path=file_path,
                             key_path=key_path,
-                            message=f"Client-server policy is set to 'CS_NEG_REFUSE' which allows unencrypted connections",
-                            suggestion="Change to 'CS_NEG_REQUIRE' to enforce SSL/TLS encryption for all connections",
+                            message=(
+                                "Client-server policy is set to 'CS_NEG_REFUSE' "
+                                "which allows unencrypted connections"
+                            ),
+                            suggestion=(
+                                "Change to 'CS_NEG_REQUIRE' to enforce SSL/TLS "
+                                "encryption for all connections"
+                            ),
                             line_map=line_map,
                         )
                     )
@@ -129,8 +133,14 @@ class SecurityPolicyRule(Rule):
                         self._create_result(
                             file_path=file_path,
                             key_path=key_path,
-                            message=f"Unknown client-server policy value: '{policy_value}'",
-                            suggestion="Use 'CS_NEG_REQUIRE' for secure connections or 'CS_NEG_DONT_CARE' for compatibility",
+                            message=(
+                                f"Unknown client-server policy value: "
+                                f"'{policy_value}'"
+                            ),
+                            suggestion=(
+                                "Use 'CS_NEG_REQUIRE' for secure connections "
+                                "or 'CS_NEG_DONT_CARE' for compatibility"
+                            ),
                             line_map=line_map,
                         )
                     )
@@ -180,7 +190,10 @@ class WeakPasswordRule(Rule):
                     file_path=file_path,
                     key_path="admin_password",
                     message=f"Weak admin password detected: '{admin_password}'",
-                    suggestion="Use a strong password with at least 12 characters, mixing uppercase, lowercase, numbers, and symbols",
+                    suggestion=(
+                        "Use a strong password with at least 12 characters, "
+                        "mixing uppercase, lowercase, numbers, and symbols"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -198,7 +211,9 @@ class WeakPasswordRule(Rule):
                     file_path=file_path,
                     key_path="server_config.plugin_configuration.database.password",
                     message=f"Weak database password detected: '{db_password}'",
-                    suggestion="Use a strong database password with at least 12 characters",
+                    suggestion=(
+                        "Use a strong database password with at least " "12 characters"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -236,7 +251,10 @@ class InsecureKeysRule(Rule):
                     file_path=file_path,
                     key_path="server_config.zone_key",
                     message="Default zone key detected",
-                    suggestion="Generate a unique zone key with up to 49 alphanumeric characters (no hyphens)",
+                    suggestion=(
+                        "Generate a unique zone key with up to 49 "
+                        "alphanumeric characters (no hyphens)"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -245,8 +263,11 @@ class InsecureKeysRule(Rule):
                 self._create_result(
                     file_path=file_path,
                     key_path="server_config.zone_key",
-                    message=f"Zone key is too short ({len(zone_key)} characters)",
-                    suggestion="Use a zone key with at least 16 characters for better security",
+                    message=(f"Zone key is too short ({len(zone_key)} characters)"),
+                    suggestion=(
+                        "Use a zone key with at least 16 characters "
+                        "for better security"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -268,8 +289,14 @@ class InsecureKeysRule(Rule):
                 self._create_result(
                     file_path=file_path,
                     key_path="server_config.negotiation_key",
-                    message=f"Negotiation key must be exactly 32 characters (current: {len(negotiation_key)})",
-                    suggestion="Generate a negotiation key with exactly 32 alphanumeric characters",
+                    message=(
+                        f"Negotiation key must be exactly 32 characters "
+                        f"(current: {len(negotiation_key)})"
+                    ),
+                    suggestion=(
+                        "Generate a negotiation key with exactly 32 "
+                        "alphanumeric characters"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -315,8 +342,13 @@ class DatabaseConfigRule(Rule):
                 self._create_result(
                     file_path=file_path,
                     key_path="server_config.plugin_configuration.database.host",
-                    message="Database connection to localhost without SSL configuration",
-                    suggestion="Consider configuring SSL for database connections even on localhost for defense in depth",
+                    message=(
+                        "Database connection to localhost without SSL " "configuration"
+                    ),
+                    suggestion=(
+                        "Consider configuring SSL for database connections "
+                        "even on localhost for defense in depth"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -329,7 +361,10 @@ class DatabaseConfigRule(Rule):
                     file_path=file_path,
                     key_path="server_config.plugin_configuration.database.name",
                     message=f"Using common database name '{db_name}'",
-                    suggestion="Consider using a more specific database name for better security through obscurity",
+                    suggestion=(
+                        "Consider using a more specific database name "
+                        "for better security through obscurity"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -375,7 +410,9 @@ class PortConfigRule(Rule):
                     file_path=file_path,
                     key_path="server_config.zone_port",
                     message="Using default iRODS port (1247)",
-                    suggestion="Consider using a non-standard port for additional security",
+                    suggestion=(
+                        "Consider using a non-standard port for " "additional security"
+                    ),
                     line_map=line_map,
                 )
             )
@@ -391,8 +428,11 @@ class PortConfigRule(Rule):
                     self._create_result(
                         file_path=file_path,
                         key_path="server_config.server_port_range_start",
-                        message=f"Large port range configured ({port_range} ports)",
-                        suggestion="Consider using a smaller port range to reduce attack surface",
+                        message=(f"Large port range configured ({port_range} ports)"),
+                        suggestion=(
+                            "Consider using a smaller port range to "
+                            "reduce attack surface"
+                        ),
                         line_map=line_map,
                     )
                 )

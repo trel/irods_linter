@@ -1,0 +1,134 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+        files: \.(json)$
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: pretty-format-json
+        args: ['--autofix', '--indent=2']
+        files: \.(json)$
+        exclude: (examples/.*\.json|schemas/.*\.json)
+
+  # Python code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        files: \.py$
+
+  # Python import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+        files: \.py$
+
+  # Python linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-docstrings, flake8-import-order]
+        args: ['--max-line-length=88', '--extend-ignore=E203,W503,D100,D101,D102,D103,D104,D105,D107']
+        files: \.py$
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+        files: \.py$
+        exclude: tests/
+        args: [--ignore-missing-imports, --no-strict-optional]
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: ['-r', '.', '-f', 'json']
+        files: \.py$
+        exclude: tests/
+
+  # Documentation checks
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        files: \.py$
+        exclude: tests/
+        args: ['--convention=google', '--add-ignore=D100,D101,D102,D103,D104,D105,D107']
+
+  # Local hooks for project-specific checks
+  - repo: local
+    hooks:
+      # Run our own linter on example JSON files
+      - id: irods-config-linter
+        name: iRODS Configuration Linter
+        entry: python
+        args: [irods_linter.py, --format=json]
+        language: python
+        files: examples/.*\.json$
+        pass_filenames: true
+
+      # Validate JSON schemas
+      - id: validate-json-examples
+        name: Validate JSON Examples
+        entry: python
+        args: [-c, "import json, sys; [json.load(open(f)) for f in sys.argv[1:]]"]
+        language: python
+        files: examples/.*\.json$
+        pass_filenames: true
+
+      # Check that tests pass
+      - id: pytest-check
+        name: PyTest
+        entry: python
+        args: [-m, pytest, tests/, -x, -v]
+        language: python
+        files: \.(py)$
+        pass_filenames: false
+        stages: [pre-push]
+
+      # Check test coverage
+      - id: pytest-coverage
+        name: PyTest Coverage
+        entry: python
+        args: [-m, pytest, --cov=linter, --cov-report=term-missing, --cov-fail-under=80]
+        language: python
+        files: \.(py)$
+        pass_filenames: false
+        stages: [pre-push]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.md$
+
+# Configuration for specific tools
+default_stages: [pre-commit]
+fail_fast: false
+minimum_pre_commit_version: 3.0.0

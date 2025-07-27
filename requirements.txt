@@ -1,0 +1,17 @@
+# Core dependencies
+rich>=13.0.0
+python-dotenv>=1.0.0
+jsonschema>=4.0.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=23.0.0
+flake8>=6.0.0
+flake8-docstrings>=1.7.0
+flake8-import-order>=0.18.0
+mypy>=1.0.0
+isort>=5.12.0
+bandit>=1.7.5
+pydocstyle>=6.3.0
+pre-commit>=3.0.0

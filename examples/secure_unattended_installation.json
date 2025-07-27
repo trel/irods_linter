@@ -1,0 +1,62 @@
+{
+    "admin_password": "StrongPassword123!@#",
+    "default_resource_directory": "/var/lib/irods/Vault",
+    "default_resource_name": "demoResc",
+    "host_system_information": {
+        "service_account_user_name": "irods",
+        "service_account_group_name": "irods"
+    },
+    "service_account_environment": {
+        "irods_client_server_policy": "CS_NEG_REQUIRE",
+        "irods_connection_pool_refresh_time_in_seconds": 300,
+        "irods_cwd": "/tempZone/home/rods",
+        "irods_default_hash_scheme": "SHA256",
+        "irods_default_number_of_transfer_threads": 4,
+        "irods_default_resource": "demoResc",
+        "irods_encryption_algorithm": "AES-256-CBC",
+        "irods_encryption_key_size": 32,
+        "irods_encryption_num_hash_rounds": 16,
+        "irods_encryption_salt_size": 8,
+        "irods_home": "/tempZone/home/rods",
+        "irods_host": "irods-provider",
+        "irods_match_hash_policy": "compatible",
+        "irods_maximum_size_for_single_buffer_in_megabytes": 32,
+        "irods_port": 1247,
+        "irods_transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
+        "irods_user_name": "rods",
+        "irods_zone_name": "tempZone",
+        "schema_name": "service_account_environment",
+        "schema_version": "v5"
+    },
+    "server_config": {
+        "catalog_service_role": "provider",
+        "client_server_policy": "CS_NEG_REQUIRE",
+        "connection_pool_refresh_time_in_seconds": 300,
+        "default_dir_mode": "0750",
+        "default_file_mode": "0600",
+        "default_hash_scheme": "SHA256",
+        "default_resource_name": "demoResc",
+        "host": "irods-provider",
+        "negotiation_key": "abc123def456ghi789jkl012mno345pq",
+        "plugin_configuration": {
+            "database": {
+                "technology": "postgres",
+                "host": "db-server.example.com",
+                "name": "irods_production_catalog",
+                "odbc_driver": "PostgreSQL ANSI",
+                "password": "SecureDbPassword789!",
+                "port": 5432,
+                "username": "irods_service"
+            }
+        },
+        "schema_name": "server_config",
+        "schema_version": "v5",
+        "server_port_range_end": 20099,
+        "server_port_range_start": 20050,
+        "zone_auth_scheme": "native",
+        "zone_key": "my_unique_zone_key_for_production_environment_123",
+        "zone_name": "tempZone",
+        "zone_port": 1300,
+        "zone_user": "rods"
+    }
+}

@@ -1,0 +1,16 @@
+# Markdownlint configuration
+default: true
+MD033: false  # Allow inline HTML
+MD041: false  # First line in file should be a top level header
+
+# Line length configuration
+MD013:
+  line_length: 120
+  code_blocks: false
+  tables: false
+
+# Allow duplicate headers
+MD024: false
+
+# Allow bare URLs
+MD034: false

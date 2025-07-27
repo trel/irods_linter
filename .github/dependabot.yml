@@ -5,7 +5,17 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
+  - package-ecosystem: "pip" # Python pip dependencies
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    # Allow both direct and indirect updates
+    open-pull-requests-limit: 10
+    # Group minor and patch updates
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

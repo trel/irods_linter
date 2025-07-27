@@ -45,6 +45,9 @@ python irods_linter.py config.json
 # Lint multiple files
 python irods_linter.py *.json
 
+# Specify iRODS version for version-specific rules
+python irods_linter.py --irods-version 5.0.1 config.json
+
 # Output as table
 python irods_linter.py --format table config.json
 
@@ -98,6 +101,43 @@ error: line 45
 |---------|------|-------------|----------|
 | FS001 | File Permissions | Checks file and directory permissions | WARNING |
 
+## Version-Dependent Rules
+
+The linter supports version-specific rules that reflect the evolution of iRODS security requirements and capabilities across different versions.
+
+### Supported Versions
+
+- **4.0.x**: Basic security checks with lenient policies
+- **4.1.x**: Enhanced password requirements  
+- **4.2.x**: Stricter SSL policies and enhanced database checks
+- **4.3.x**: Improved key validation
+- **5.0.x**: Advanced security features and strict SSL requirements
+
+### Version Differences Example
+
+The same configuration may receive different severities based on iRODS version:
+
+**SSL Policy (CS_NEG_REFUSE)**:
+- 4.0.x: **WARNING** (basic SSL support)
+- 4.2.x+: **ERROR** (enhanced SSL support)
+- 5.0.x: **ERROR** with stricter allowed values
+
+**Password Requirements**:
+- 4.0.x: 6+ characters minimum
+- 4.1.x: 10+ characters minimum  
+- 4.2.x+: 12+ characters minimum
+
+### Usage
+
+```bash
+# Automatically detect version from config (if possible)
+python irods_linter.py config.json
+
+# Specify version explicitly
+python irods_linter.py --irods-version 5.0.1 config.json
+python irods_linter.py --irods-version 4.2.8 config.json
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -124,6 +164,7 @@ python irods_linter.py --help
 
 #### Key Options
 
+- `--irods-version`: Specify iRODS version for version-specific rules (e.g., 4.2.8, 5.0.1)
 - `--format`: Output format (default, table, json)
 - `--severity`: Minimum severity level to show (error, warning, info, style)
 - `--exclude-rules`: Rule IDs to exclude

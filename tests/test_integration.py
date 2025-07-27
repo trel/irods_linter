@@ -21,7 +21,10 @@ class TestIRODSLinter:
 
     def test_lint_file_with_issues(self, temp_config_file: Path):
         """Test linting a file with known issues."""
-        linter = IRODSLinter()
+        from rich.console import Console
+
+        console = Console()
+        linter = IRODSLinter(console)
         results = linter.lint_file(temp_config_file)
 
         assert len(results) > 0
@@ -38,7 +41,10 @@ class TestIRODSLinter:
         with open(secure_file, "w") as f:
             json.dump(secure_config_data, f, indent=2)
 
-        linter = IRODSLinter()
+        from rich.console import Console
+
+        console = Console()
+        linter = IRODSLinter(console)
         results = linter.lint_file(secure_file)
 
         # Should have no errors for secure config
@@ -51,7 +57,10 @@ class TestIRODSLinter:
         with open(invalid_file, "w") as f:
             f.write('{"invalid": json}')
 
-        linter = IRODSLinter()
+        from rich.console import Console
+
+        console = Console()
+        linter = IRODSLinter(console)
         results = linter.lint_file(invalid_file)
 
         assert len(results) == 1
@@ -211,7 +220,10 @@ class TestWithSampleFiles:
     def test_sample_file_has_expected_issues(self):
         """Test that sample file contains expected security issues."""
         sample_file = Path("examples/sample_unattended_installation.json")
-        linter = IRODSLinter()
+        from rich.console import Console
+
+        console = Console()
+        linter = IRODSLinter(console)
         results = linter.lint_file(sample_file)
 
         # Extract rule IDs
@@ -226,7 +238,10 @@ class TestWithSampleFiles:
         secure_file = Path("examples/secure_unattended_installation.json")
 
         if secure_file.exists():
-            linter = IRODSLinter()
+            from rich.console import Console
+
+            console = Console()
+            linter = IRODSLinter(console)
             results = linter.lint_file(secure_file)
 
             # Should have no errors

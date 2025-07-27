@@ -25,15 +25,31 @@ from linter.rules import RuleEngine
 class IRODSLinter:
     """Main linter class that orchestrates the linting process."""
 
-    def __init__(self, console: Optional[Console] = None):
-        self.console = console or Console()
-        self.rule_engine = RuleEngine()
+    def __init__(self, console: Console, irods_version: Optional[str] = None):
+        self.console = console
         self.config_parser = ConfigParser()
+        self.rule_engine = RuleEngine(irods_version)
 
-    def lint_file(self, file_path: Path) -> List[LintResult]:
+    def get_available_versions(self) -> List[str]:
+        """Return list of available iRODS versions."""
+        return self.rule_engine.rule_loader.get_available_versions()
+
+    def lint_configs(
+        self, config_paths: List[Path], only_rules: Optional[List[str]] = None
+    ):
+        """Lint configuration files."""
+        all_results = []
+        for config_path in config_paths:
+            results = self.lint_file(config_path, only_rules)
+            all_results.extend(results)
+        return all_results
+
+    def lint_file(self, file_path: Path, only_rules: Optional[List[str]] = None):
         """Lint a single configuration file."""
         try:
             config_data = self.config_parser.parse_file(file_path)
+
+            # Apply rules using the configured version
             return self.rule_engine.apply_rules(config_data, file_path)
         except Exception as e:
             return [
@@ -47,6 +63,10 @@ class IRODSLinter:
                     suggestion="Check file format and syntax",
                 )
             ]
+
+    def set_irods_version(self, version: str):
+        """Set the iRODS version for linting."""
+        self.irods_version = version
 
     def display_results(self, results: List[LintResult], format_type: str = "default"):
         """Display linting results in various formats."""
@@ -174,7 +194,7 @@ Examples:
     )
 
     parser.add_argument(
-        "files", nargs="+", type=Path, help="Configuration files to lint"
+        "files", nargs="*", type=Path, help="Configuration files to lint"
     )
 
     parser.add_argument(
@@ -203,6 +223,17 @@ Examples:
 
     parser.add_argument("--config", type=Path, help="Path to linter configuration file")
 
+    parser.add_argument(
+        "--irods-version",
+        help="Specify iRODS version for rule selection (e.g., 4.3.x, 5.0.x)",
+    )
+
+    parser.add_argument(
+        "--list-versions",
+        action="store_true",
+        help="List available iRODS versions and exit",
+    )
+
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     parser.add_argument("--version", action="version", version="iRODS Linter 1.0.0")
@@ -210,7 +241,21 @@ Examples:
     args = parser.parse_args()
 
     console = Console()
-    linter = IRODSLinter(console)
+
+    # Handle list-versions command
+    if args.list_versions:
+        linter = IRODSLinter(console)
+        versions = linter.get_available_versions()
+        console.print("[bold cyan]Available iRODS Versions:[/bold cyan]")
+        for version in versions:
+            console.print(f"  • {version}")
+        sys.exit(0)
+
+    # Require files if not using --list-versions
+    if not args.files:
+        parser.error("the following arguments are required: files")
+
+    linter = IRODSLinter(console, args.irods_version)
 
     # Configure rule engine based on arguments
     if args.rules_dir:

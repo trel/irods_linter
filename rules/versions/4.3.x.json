@@ -1,0 +1,187 @@
+{
+  "metadata": {
+    "created": "2025-07-27",
+    "description": "Configuration linting rules for iRODS 4.3.x series",
+    "name": "iRODS 4.3 Rules",
+    "updated": "2025-07-27"
+  },
+  "rules": [
+    {
+      "config": {
+        "allowed_values": [
+          "CS_NEG_REQUIRE"
+        ],
+        "check_locations": [
+          "service_account_environment.irods_client_server_policy",
+          "server_config.client_server_policy",
+          "irods_client_server_policy"
+        ],
+        "forbidden_values": [
+          "CS_NEG_REFUSE",
+          "CS_NEG_DONT_CARE"
+        ],
+        "note": "4.3+ has improved SSL/TLS support and should require secure connections"
+      },
+      "description": "Client-server policy should require SSL/TLS connections",
+      "documentation_url": "https://docs.irods.org/4.3.3/system_overview/tls/",
+      "enabled": true,
+      "id": "SEC001",
+      "name": "Client-Server SSL Policy",
+      "severity": "ERROR",
+      "tags": [
+        "security",
+        "ssl",
+        "communication"
+      ],
+      "type": "security_policy"
+    },
+    {
+      "config": {
+        "check_fields": [
+          "irods_password",
+          "admin_password",
+          "server_config.plugin_configuration.database.password"
+        ],
+        "min_length": 8,
+        "weak_passwords": [
+          "password",
+          "123456",
+          "admin",
+          "irods",
+          "rods",
+          "testpassword"
+        ]
+      },
+      "description": "Check for weak or default passwords",
+      "enabled": true,
+      "id": "SEC002",
+      "name": "Password Strength",
+      "severity": "ERROR",
+      "tags": [
+        "security",
+        "authentication",
+        "passwords"
+      ],
+      "type": "weak_password"
+    },
+    {
+      "config": {
+        "negotiation_key": {
+          "required_length": 32
+        },
+        "zone_key": {
+          "max_length": 49,
+          "min_length": 12
+        }
+      },
+      "description": "Check for default or weak encryption keys",
+      "enabled": true,
+      "id": "SEC003",
+      "name": "Default Keys Check",
+      "severity": "ERROR",
+      "tags": [
+        "security",
+        "encryption",
+        "keys"
+      ],
+      "type": "insecure_keys"
+    },
+    {
+      "config": {
+        "check_paths": [
+          "database_config"
+        ],
+        "localhost_variants": [
+          "localhost",
+          "127.0.0.1"
+        ],
+        "require_ssl": true
+      },
+      "description": "Check database configuration for security",
+      "enabled": true,
+      "id": "DB001",
+      "name": "Database Configuration",
+      "severity": "ERROR",
+      "tags": [
+        "database",
+        "configuration",
+        "security"
+      ],
+      "type": "database_config"
+    },
+    {
+      "config": {
+        "default_ports": [
+          1247,
+          1248
+        ],
+        "port_range": [
+          1000,
+          65535
+        ]
+      },
+      "description": "Check network port configuration",
+      "enabled": true,
+      "id": "NET001",
+      "name": "Port Configuration",
+      "severity": "WARNING",
+      "tags": [
+        "network",
+        "ports"
+      ],
+      "type": "port_config"
+    },
+    {
+      "config": {
+        "insecure_dir_modes": [
+          "0755",
+          "0777"
+        ],
+        "insecure_file_modes": [
+          "0644",
+          "0666"
+        ],
+        "recommended_dir_modes": [
+          "0700",
+          "0750"
+        ],
+        "recommended_file_modes": [
+          "0600",
+          "0640"
+        ]
+      },
+      "description": "Check file and directory permissions",
+      "enabled": true,
+      "id": "FS001",
+      "name": "File Permissions",
+      "severity": "ERROR",
+      "tags": [
+        "filesystem",
+        "permissions"
+      ],
+      "type": "file_permissions"
+    },
+    {
+      "config": {
+        "check_paths": [
+          "server_config.rule_engines"
+        ],
+        "note": "4.3+ supports multiple rule engines",
+        "required_engines": [
+          "irods_rule_engine_plugin-irods_rule_language"
+        ]
+      },
+      "description": "Check for proper rule engine configuration in 4.3+",
+      "enabled": true,
+      "id": "RULE001",
+      "name": "Rule Engine Configuration",
+      "severity": "INFO",
+      "tags": [
+        "rule-engine",
+        "configuration"
+      ],
+      "type": "version_specific"
+    }
+  ],
+  "version": "4.3.x"
+}

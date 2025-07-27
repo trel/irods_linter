@@ -22,12 +22,15 @@ This document summarizes the comprehensive testing and code quality infrastructu
 - **Integration Tests**: CLI functionality and complete workflows
 - **Validation Tests**: Data model constraints and error handling
 - **Regression Tests**: Ensure existing functionality remains intact
+- **JSON Rule Tests**: Version-specific rule validation and loading
+- **Version-Specific Tests**: Cross-version rule compatibility
 
 #### Key Test Features
 - **Parametrized Tests**: Test multiple scenarios efficiently
 - **Fixture-based**: Reusable test data and configurations
 - **Mock-friendly**: Isolated testing without external dependencies
 - **Coverage Reporting**: Detailed line-by-line coverage analysis
+- **Version Testing**: All supported iRODS versions (4.0.x through 5.0.x)
 
 ### 2. Pre-commit Hook Configuration
 
@@ -98,7 +101,32 @@ MD013: { line_length: 120, code_blocks: false }
 MD033: false  # Allow inline HTML
 ```
 
-### 4. Make Targets for Development
+### 4. JSON Rule System Testing
+
+**Version-Dependent Rule Validation:**
+
+```makefile
+# JSON Rules Testing
+make test-json-rules        # Test JSON rule functionality
+make validate-rule-files    # Validate all JSON rule files
+make test-versions          # Test all supported iRODS versions
+```
+
+#### JSON Rule Test Coverage
+- **Rule Loading**: Validate JSON rule file parsing and schema compliance
+- **Version Detection**: Test automatic and explicit version selection
+- **Rule Application**: Verify rules apply correctly per version
+- **Configuration Compatibility**: Test rule config structures match implementation
+- **Cross-Version Testing**: Ensure all versions (4.0.x through 5.0.x) load and execute
+
+#### Supported iRODS Versions Tested
+- 4.0.x: Basic security policies
+- 4.1.x: Enhanced password requirements
+- 4.2.x: Stricter SSL enforcement
+- 4.3.x: Improved key validation
+- 5.0.x: Advanced security features
+
+### 5. Make Targets for Development
 
 **Enhanced Makefile with comprehensive commands:**
 

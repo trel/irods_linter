@@ -1,0 +1,193 @@
+{
+  "metadata": {
+    "created": "2025-07-27",
+    "description": "Configuration linting rules for iRODS 4.1.x series",
+    "name": "iRODS 4.1 Rules",
+    "updated": "2025-07-27"
+  },
+  "rules": [
+    {
+      "config": {
+        "allowed_values": [
+          "CS_NEG_REQUIRE",
+          "CS_NEG_DONT_CARE"
+        ],
+        "check_locations": [
+          "service_account_environment.irods_client_server_policy",
+          "server_config.client_server_policy",
+          "irods_client_server_policy"
+        ],
+        "forbidden_values": [
+          "CS_NEG_REFUSE"
+        ]
+      },
+      "description": "Client-server policy should require SSL/TLS connections",
+      "documentation_url": "https://docs.irods.org/4.1.12/system_overview/tls/",
+      "enabled": true,
+      "id": "SEC001",
+      "name": "Secure Client-Server Policy",
+      "severity": "WARNING",
+      "tags": [
+        "security",
+        "ssl",
+        "communication"
+      ],
+      "type": "security_policy"
+    },
+    {
+      "config": {
+        "check_fields": [
+          "admin_password",
+          "server_config.plugin_configuration.database.password"
+        ],
+        "min_length": 10,
+        "weak_passwords": [
+          "password",
+          "123456",
+          "admin",
+          "root",
+          "test",
+          "testpassword",
+          "irods",
+          "rods",
+          "changeme",
+          "default"
+        ]
+      },
+      "description": "Check for weak or default passwords",
+      "enabled": true,
+      "id": "SEC002",
+      "name": "Weak Password Detection",
+      "severity": "ERROR",
+      "tags": [
+        "security",
+        "password",
+        "authentication"
+      ],
+      "type": "weak_password"
+    },
+    {
+      "config": {
+        "negotiation_key": {
+          "default_value": "32_byte_server_negotiation_key__",
+          "required_length": 32
+        },
+        "zone_key": {
+          "default_value": "TEMPORARY_ZONE_KEY",
+          "max_length": 49,
+          "min_length": 16
+        }
+      },
+      "description": "Check for default or weak encryption keys",
+      "enabled": true,
+      "id": "SEC003",
+      "name": "Insecure Encryption Keys",
+      "severity": "ERROR",
+      "tags": [
+        "security",
+        "encryption",
+        "keys"
+      ],
+      "type": "insecure_keys"
+    },
+    {
+      "config": {
+        "common_db_names": [
+          "icat",
+          "test",
+          "irods_test"
+        ],
+        "localhost_variants": [
+          "localhost",
+          "127.0.0.1"
+        ],
+        "ssl_indicators": [
+          "ssl",
+          "tls",
+          "encrypt",
+          "secure"
+        ]
+      },
+      "description": "Check database configuration for best practices",
+      "enabled": true,
+      "id": "DB001",
+      "name": "Database Configuration",
+      "severity": "WARNING",
+      "tags": [
+        "database",
+        "configuration",
+        "performance"
+      ],
+      "type": "database_config"
+    },
+    {
+      "config": {
+        "default_port": 1247,
+        "max_port_range": 1000
+      },
+      "description": "Check network port configuration for security",
+      "enabled": true,
+      "id": "NET001",
+      "name": "Port Configuration",
+      "severity": "INFO",
+      "tags": [
+        "network",
+        "ports",
+        "security"
+      ],
+      "type": "port_config"
+    },
+    {
+      "config": {
+        "insecure_dir_modes": [
+          "0755",
+          "0777"
+        ],
+        "insecure_file_modes": [
+          "0644",
+          "0666"
+        ],
+        "recommended_dir_modes": [
+          "0700",
+          "0750"
+        ],
+        "recommended_file_modes": [
+          "0600",
+          "0640"
+        ]
+      },
+      "description": "Check file and directory permissions for security",
+      "enabled": true,
+      "id": "FS001",
+      "name": "File Permissions",
+      "severity": "WARNING",
+      "tags": [
+        "filesystem",
+        "permissions",
+        "security"
+      ],
+      "type": "file_permissions"
+    },
+    {
+      "config": {
+        "check_path": "server_config.plugin_configuration",
+        "required_plugins": [
+          "database",
+          "authentication",
+          "network"
+        ]
+      },
+      "description": "Check plugin configuration for 4.1+ features",
+      "enabled": true,
+      "id": "PLG001",
+      "name": "Plugin Configuration",
+      "severity": "INFO",
+      "tags": [
+        "plugins",
+        "configuration"
+      ],
+      "type": "version_specific"
+    }
+  ],
+  "version": "4.1.x"
+}

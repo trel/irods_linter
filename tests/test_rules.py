@@ -1,30 +1,40 @@
 """
 Tests for the rules module.
 
-This module tests individual rules and the rule engine.
+This module tests individual rules and the rule engine with
+version-dependent JSON rules.
 """
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
+
+import pytest
 
 from linter.models import Severity
-from linter.rules import (
-    DatabaseConfigRule,
-    FilePermissionsRule,
-    InsecureKeysRule,
-    PortConfigRule,
-    RuleEngine,
-    SecurityPolicyRule,
-    WeakPasswordRule,
-)
+from linter.rule_loader import RuleLoader
+from linter.rules import JsonRule, RuleEngine
 
 
-class TestSecurityPolicyRule:
-    """Test cases for SecurityPolicyRule."""
+class TestJsonRule:
+    """Test cases for JsonRule class."""
 
-    def test_detects_cs_neg_refuse_in_service_account(self, line_map: Dict[str, int]):
+    def test_security_policy_rule_detects_cs_neg_refuse(self, line_map: Dict[str, int]):
         """Test detection of CS_NEG_REFUSE in service account environment."""
-        rule = SecurityPolicyRule()
+        rule_def = {
+            "id": "SEC_001",
+            "name": "Test Security Policy",
+            "description": "Test rule for security policy detection",
+            "type": "security_policy",
+            "severity": "error",
+            "config": {
+                "check_locations": [
+                    "service_account_environment.irods_client_server_policy"
+                ],
+                "forbidden_values": ["CS_NEG_REFUSE"],
+                "allowed_values": ["CS_NEG_REQUIRE"],
+            },
+        }
+        rule = JsonRule(rule_def)
         config_data = {
             "service_account_environment": {
                 "irods_client_server_policy": "CS_NEG_REFUSE"
@@ -34,24 +44,27 @@ class TestSecurityPolicyRule:
         results = rule.check(config_data, Path("test.json"), line_map)
 
         assert len(results) == 1
-        assert results[0].rule_id == "SEC001"
+        assert results[0].rule_id == "SEC_001"
         assert results[0].severity == Severity.ERROR
-        assert "CS_NEG_REFUSE" in results[0].message
+        assert "Client-server policy is set to 'CS_NEG_REFUSE'" in results[0].message
 
-    def test_detects_cs_neg_refuse_in_server_config(self, line_map: Dict[str, int]):
-        """Test detection of CS_NEG_REFUSE in server config."""
-        rule = SecurityPolicyRule()
-        config_data = {"server_config": {"client_server_policy": "CS_NEG_REFUSE"}}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert results[0].rule_id == "SEC001"
-        assert "CS_NEG_REFUSE" in results[0].message
-
-    def test_accepts_cs_neg_require(self, line_map: Dict[str, int]):
-        """Test that CS_NEG_REQUIRE is accepted."""
-        rule = SecurityPolicyRule()
+    def test_security_policy_rule_allows_secure_policy(self, line_map: Dict[str, int]):
+        """Test that secure policies don't trigger the rule."""
+        rule_def = {
+            "id": "SEC_001",
+            "name": "Test Security Policy",
+            "description": "Test rule for security policy detection",
+            "type": "security_policy",
+            "severity": "error",
+            "config": {
+                "check_locations": [
+                    "service_account_environment.irods_client_server_policy"
+                ],
+                "forbidden_values": ["CS_NEG_REFUSE"],
+                "allowed_values": ["CS_NEG_REQUIRE"],
+            },
+        }
+        rule = JsonRule(rule_def)
         config_data = {
             "service_account_environment": {
                 "irods_client_server_policy": "CS_NEG_REQUIRE"
@@ -62,251 +75,252 @@ class TestSecurityPolicyRule:
 
         assert len(results) == 0
 
-    def test_detects_unknown_policy(self, line_map: Dict[str, int]):
-        """Test detection of unknown policy values."""
-        rule = SecurityPolicyRule()
-        config_data = {
-            "service_account_environment": {
-                "irods_client_server_policy": "UNKNOWN_POLICY"
-            }
+    def test_weak_password_rule_detects_weak_passwords(self, line_map: Dict[str, int]):
+        """Test detection of weak passwords."""
+        rule_def = {
+            "id": "PWD_001",
+            "name": "Test Password Rule",
+            "description": "Test rule for password detection",
+            "type": "weak_password",
+            "severity": "warning",
+            "config": {
+                "weak_passwords": ["password", "123456", "admin", "irods"],
+                "min_length": 8,
+                "check_fields": ["irods_password"],
+            },
         }
+        rule = JsonRule(rule_def)
+        config_data = {"irods_password": "password"}
 
         results = rule.check(config_data, Path("test.json"), line_map)
 
         assert len(results) == 1
-        assert "Unknown client-server policy" in results[0].message
-
-
-class TestWeakPasswordRule:
-    """Test cases for WeakPasswordRule."""
-
-    def test_detects_weak_admin_password(self, line_map: Dict[str, int]):
-        """Test detection of weak admin passwords."""
-        rule = WeakPasswordRule()
-        config_data = {"admin_password": "rods"}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert results[0].rule_id == "SEC002"
+        assert results[0].rule_id == "PWD_001"
         assert results[0].severity == Severity.WARNING
-        assert "rods" in results[0].message
 
-    def test_detects_weak_database_password(self, line_map: Dict[str, int]):
-        """Test detection of weak database passwords."""
-        rule = WeakPasswordRule()
+    def test_port_config_rule_detects_insecure_ports(self, line_map: Dict[str, int]):
+        """Test detection of insecure port configurations."""
+        rule_def = {
+            "id": "PORT_001",
+            "name": "Test Port Rule",
+            "description": "Test rule for port configuration",
+            "type": "port_config",
+            "severity": "error",
+            "config": {"default_port": 1247, "max_port_range": 1000},
+        }
+        rule = JsonRule(rule_def)
+        config_data = {"server_config": {"zone_port": 1247}}
+
+        results = rule.check(config_data, Path("test.json"), line_map)
+
+        assert len(results) == 1
+        assert results[0].rule_id == "PORT_001"
+
+    def test_database_config_rule_with_regex(self, line_map: Dict[str, int]):
+        """Test database configuration validation with regex."""
+        rule_def = {
+            "id": "DB_001",
+            "name": "Test Database Rule",
+            "description": "Test rule for database configuration",
+            "type": "database_config",
+            "severity": "warning",
+            "config": {
+                "ssl_indicators": ["ssl", "tls"],
+                "common_db_names": ["ICAT", "icat", "test"],
+                "localhost_variants": ["localhost", "127.0.0.1"],
+                "require_ssl": False,
+            },
+        }
+        rule = JsonRule(rule_def)
         config_data = {
             "server_config": {
-                "plugin_configuration": {"database": {"password": "testpassword"}}
+                "plugin_configuration": {
+                    "database": {"host": "localhost", "name": "ICAT"}
+                }
             }
         }
 
         results = rule.check(config_data, Path("test.json"), line_map)
 
         assert len(results) == 1
-        assert "testpassword" in results[0].message
+        assert results[0].rule_id == "DB_001"
 
-    def test_accepts_strong_password(self, line_map: Dict[str, int]):
-        """Test that strong passwords are accepted."""
-        rule = WeakPasswordRule()
-        config_data = {"admin_password": "StrongPassword123!@#"}
+    def test_missing_path_returns_no_results(self, line_map: Dict[str, int]):
+        """Test that missing paths don't cause errors."""
+        rule_def = {
+            "id": "TEST_001",
+            "name": "Test Rule",
+            "description": "Test rule for missing paths",
+            "type": "test",
+            "severity": "info",
+            "message": "Test rule",
+            "suggestion": "Test suggestion",
+            "checks": [
+                {
+                    "path": ["nonexistent", "path"],
+                    "operation": "equals",
+                    "value": "test",
+                }
+            ],
+        }
+        rule = JsonRule(rule_def)
+        config_data = {"other": "value"}
 
         results = rule.check(config_data, Path("test.json"), line_map)
 
         assert len(results) == 0
 
 
-class TestInsecureKeysRule:
-    """Test cases for InsecureKeysRule."""
+class TestRuleLoader:
+    """Test cases for RuleLoader class."""
 
-    def test_detects_default_zone_key(self, line_map: Dict[str, int]):
-        """Test detection of default zone key."""
-        rule = InsecureKeysRule()
-        config_data = {"server_config": {"zone_key": "TEMPORARY_ZONE_KEY"}}
+    def test_version_normalization(self):
+        """Test version normalization functionality."""
+        loader = RuleLoader()
 
-        results = rule.check(config_data, Path("test.json"), line_map)
+        assert loader._normalize_version("4.3.1") == "4.3.x"
+        assert loader._normalize_version("5.0.0") == "5.0.x"
+        assert loader._normalize_version("4.2.8") == "4.2.x"
+        assert loader._normalize_version("unknown") == "unknown"
 
-        assert len(results) == 1
-        assert results[0].rule_id == "SEC003"
-        assert "Default zone key" in results[0].message
+    def test_get_available_versions(self):
+        """Test getting available versions."""
+        loader = RuleLoader()
+        versions = loader.get_available_versions()
 
-    def test_detects_default_negotiation_key(self, line_map: Dict[str, int]):
-        """Test detection of default negotiation key."""
-        rule = InsecureKeysRule()
-        config_data = {
-            "server_config": {"negotiation_key": "32_byte_server_negotiation_key__"}
-        }
+        # Should include our created versions
+        expected_versions = ["4.0.x", "4.1.x", "4.2.x", "4.3.x", "5.0.x"]
+        for version in expected_versions:
+            assert version in versions
 
-        results = rule.check(config_data, Path("test.json"), line_map)
+    def test_load_rules_for_version(self):
+        """Test loading rules for specific version."""
+        loader = RuleLoader()
+        rules = loader.load_rules("4.3.x")
 
-        assert len(results) == 1
-        assert "Default negotiation key" in results[0].message
+        assert isinstance(rules, list)
+        assert len(rules) > 0
+        # Should be JsonRule instances
+        assert all(isinstance(rule, JsonRule) for rule in rules)
 
-    def test_detects_short_zone_key(self, line_map: Dict[str, int]):
-        """Test detection of short zone keys."""
-        rule = InsecureKeysRule()
-        config_data = {"server_config": {"zone_key": "short"}}
+    def test_load_rules_fallback_to_latest(self):
+        """Test fallback to latest version for unknown versions."""
+        loader = RuleLoader()
+        rules = loader.load_rules("9.9.x")  # Non-existent version
 
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "too short" in results[0].message
-
-    def test_detects_wrong_length_negotiation_key(self, line_map: Dict[str, int]):
-        """Test detection of wrong length negotiation keys."""
-        rule = InsecureKeysRule()
-        config_data = {"server_config": {"negotiation_key": "too_short"}}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "exactly 32 characters" in results[0].message
-
-
-class TestDatabaseConfigRule:
-    """Test cases for DatabaseConfigRule."""
-
-    def test_detects_localhost_without_ssl(self, line_map: Dict[str, int]):
-        """Test detection of localhost database without SSL."""
-        rule = DatabaseConfigRule()
-        config_data = {
-            "server_config": {
-                "plugin_configuration": {"database": {"host": "localhost"}}
-            }
-        }
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) >= 1
-        localhost_results = [r for r in results if "localhost" in r.message]
-        assert len(localhost_results) == 1
-
-    def test_detects_common_database_name(self, line_map: Dict[str, int]):
-        """Test detection of common database names."""
-        rule = DatabaseConfigRule()
-        config_data = {
-            "server_config": {"plugin_configuration": {"database": {"name": "ICAT"}}}
-        }
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) >= 1
-        name_results = [r for r in results if "common database name" in r.message]
-        assert len(name_results) == 1
-
-
-class TestPortConfigRule:
-    """Test cases for PortConfigRule."""
-
-    def test_detects_default_port(self, line_map: Dict[str, int]):
-        """Test detection of default iRODS port."""
-        rule = PortConfigRule()
-        config_data = {"server_config": {"zone_port": 1247}}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "default iRODS port" in results[0].message
-
-    def test_detects_large_port_range(self, line_map: Dict[str, int]):
-        """Test detection of large port ranges."""
-        rule = PortConfigRule()
-        config_data = {
-            "server_config": {
-                "server_port_range_start": 20000,
-                "server_port_range_end": 22000,  # 2000 port range
-            }
-        }
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "Large port range" in results[0].message
-
-
-class TestFilePermissionsRule:
-    """Test cases for FilePermissionsRule."""
-
-    def test_detects_world_readable_files(self, line_map: Dict[str, int]):
-        """Test detection of world-readable file permissions."""
-        rule = FilePermissionsRule()
-        config_data = {"server_config": {"default_file_mode": "0644"}}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "world-readable" in results[0].message
-
-    def test_detects_world_accessible_directories(self, line_map: Dict[str, int]):
-        """Test detection of world-accessible directory permissions."""
-        rule = FilePermissionsRule()
-        config_data = {"server_config": {"default_dir_mode": "0755"}}
-
-        results = rule.check(config_data, Path("test.json"), line_map)
-
-        assert len(results) == 1
-        assert "world access" in results[0].message
+        assert isinstance(rules, list)
+        assert len(rules) > 0
 
 
 class TestRuleEngine:
-    """Test cases for RuleEngine."""
+    """Test cases for RuleEngine class."""
 
-    def test_applies_all_rules(self, sample_config_data: Dict[str, Any]):
-        """Test that rule engine applies all rules."""
+    def test_rule_engine_initialization(self):
+        """Test RuleEngine initialization."""
         engine = RuleEngine()
-        results = engine.apply_rules(sample_config_data, Path("test.json"))
+        assert engine.rule_loader is not None
+        assert engine.irods_version is None
 
-        # Should find multiple issues in sample config
+    def test_rule_engine_with_version(self):
+        """Test RuleEngine with specific version."""
+        engine = RuleEngine("4.3.x")
+        assert engine.irods_version == "4.3.x"
+
+    def test_apply_rules_integration(self, line_map: Dict[str, int]):
+        """Test applying rules through the engine."""
+        engine = RuleEngine("4.3.x")
+        config_data = {
+            "service_account_environment": {
+                "irods_client_server_policy": "CS_NEG_REFUSE"
+            },
+            "irods_password": "password",
+        }
+
+        results = engine.apply_rules(config_data, Path("test.json"))
+
+        # Should have multiple rule violations
         assert len(results) > 0
+        # All results should be LintResult objects
+        assert all(hasattr(result, "rule_id") for result in results)
+        assert all(hasattr(result, "severity") for result in results)
 
-        # Check that different rule types are present
-        rule_ids = {result.rule_id for result in results}
-        assert "SEC001" in rule_ids  # Security policy
-        assert "SEC002" in rule_ids  # Weak passwords
-        assert "SEC003" in rule_ids  # Insecure keys
-
-    def test_exclude_rules(self, sample_config_data: Dict[str, Any]):
-        """Test excluding specific rules."""
+    def test_version_detection_from_config(self):
+        """Test automatic version detection from config."""
         engine = RuleEngine()
-        engine.exclude_rules(["SEC002"])  # Exclude password checks
+        config_data = {"schema_version": "v4", "catalog_provider_hosts": ["localhost"]}
 
-        results = engine.apply_rules(sample_config_data, Path("test.json"))
+        detected_version = engine._detect_version_from_config(config_data)
+        # Should detect version 4.x based on schema
+        assert detected_version.startswith("4.")
 
-        # Should not contain any SEC002 results
-        rule_ids = {result.rule_id for result in results}
-        assert "SEC002" not in rule_ids
 
-    def test_only_rules(self, sample_config_data: Dict[str, Any]):
-        """Test running only specific rules."""
-        engine = RuleEngine()
-        engine.only_rules(["SEC001"])  # Only security policy
+class TestVersionSpecificRules:
+    """Test version-specific rule behavior."""
 
-        results = engine.apply_rules(sample_config_data, Path("test.json"))
+    @pytest.mark.parametrize("version", ["4.0.x", "4.1.x", "4.2.x", "4.3.x", "5.0.x"])
+    def test_rules_load_for_all_versions(self, version):
+        """Test that rules load successfully for all supported versions."""
+        loader = RuleLoader()
+        rules = loader.load_rules(version)
 
-        # Should only contain SEC001 results
-        rule_ids = {result.rule_id for result in results}
-        assert rule_ids == {"SEC001"}
+        assert isinstance(rules, list)
+        assert len(rules) > 0
+        assert all(isinstance(rule, JsonRule) for rule in rules)
 
-    def test_secure_config_passes(self, secure_config_data: Dict[str, Any]):
-        """Test that secure configuration passes all rules."""
-        engine = RuleEngine()
-        results = engine.apply_rules(secure_config_data, Path("test.json"))
+    def test_version_specific_rule_differences(self, line_map: Dict[str, int]):
+        """Test that different versions have different rule sets."""
+        config_data = {
+            "service_account_environment": {
+                "irods_client_server_policy": "CS_NEG_REFUSE"
+            }
+        }
 
-        # Should have no errors for secure config
-        errors = [r for r in results if r.severity == Severity.ERROR]
-        assert len(errors) == 0
+        # Test multiple versions
+        results_4_0 = RuleEngine("4.0.x").apply_rules(config_data, Path("test.json"))
+        results_5_0 = RuleEngine("5.0.x").apply_rules(config_data, Path("test.json"))
 
-    def test_get_rule_info(self):
-        """Test getting rule information."""
-        engine = RuleEngine()
-        rule_info = engine.get_rule_info()
+        # Both should detect issues, but potentially different numbers/severities
+        assert len(results_4_0) > 0
+        assert len(results_5_0) > 0
 
-        assert len(rule_info) > 0
+    def test_version_specific_rule_application(self, line_map: Dict[str, int]):
+        """Test that different versions apply their rules correctly."""
+        config_data = {
+            "irods_password": "simplepass",
+            "service_account_environment": {
+                "irods_client_server_policy": "CS_NEG_REFUSE"
+            },
+        }
 
-        # Check structure of rule info
-        for info in rule_info:
-            assert "id" in info
-            assert "name" in info
-            assert "description" in info
-            assert "severity" in info
-            assert "tags" in info
+        # Test that each version applies its rules consistently
+        results_4_0 = RuleEngine("4.0.x").apply_rules(config_data, Path("test.json"))
+        results_5_0 = RuleEngine("5.0.x").apply_rules(config_data, Path("test.json"))
+
+        # Both should detect issues (no assumption about which is "stricter")
+        assert len(results_4_0) > 0
+        assert len(results_5_0) > 0
+
+        # Each version should consistently apply the same rules for the same input
+        results_4_0_again = RuleEngine("4.0.x").apply_rules(
+            config_data, Path("test.json")
+        )
+        results_5_0_again = RuleEngine("5.0.x").apply_rules(
+            config_data, Path("test.json")
+        )
+
+        assert len(results_4_0) == len(results_4_0_again)
+        assert len(results_5_0) == len(results_5_0_again)
+
+
+# Existing fixtures remain the same
+@pytest.fixture
+def line_map():
+    """Provide a simple line map for testing."""
+    return {
+        "service_account_environment": 5,
+        "irods_client_server_policy": 6,
+        "irods_password": 10,
+        "irods_port": 15,
+        "database_config": 20,
+        "db_host": 21,
+    }

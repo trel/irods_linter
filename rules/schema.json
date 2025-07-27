@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Schema for iRODS configuration linting rules",
+  "properties": {
+    "metadata": {
+      "properties": {
+        "created": {
+          "format": "date",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "updated": {
+          "format": "date",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "rules": {
+      "items": {
+        "properties": {
+          "config": {
+            "description": "Rule-specific configuration options",
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "documentation_url": {
+            "format": "uri",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          },
+          "id": {
+            "pattern": "^[A-Z]{2,3}[0-9]{3}$",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "ERROR",
+              "WARNING",
+              "INFO"
+            ],
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "security_policy",
+              "weak_password",
+              "insecure_keys",
+              "database_config",
+              "port_config",
+              "file_permissions",
+              "version_specific"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "severity",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "version": {
+      "description": "iRODS version these rules apply to",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "rules"
+  ],
+  "title": "iRODS Rules Schema",
+  "type": "object"
+}

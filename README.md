@@ -394,4 +394,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📖 [Documentation](https://github.com/metadata-school/irods_linter/wiki)
 - 🐛 [Issue Tracker](https://github.com/metadata-school/irods_linter/issues)
 - 💬 [Discussions](https://github.com/metadata-school/irods_linter/discussions)
-A linter for iRODS configfuration files
+A linter for iRODS configuration files
